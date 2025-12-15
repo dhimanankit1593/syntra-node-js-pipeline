@@ -1,0 +1,101 @@
+version: "3.8"
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+services:
+  # -----------------------------
+  # Node.js App (Jenkins built)
+  # -----------------------------
+  nodejs-jenkins-app:
+    image: nodes-app-jenkins:latest
+    container_name: nodejs-jenkins-app
+    ports:
+      - "8004:8004"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # -----------------------------
+  # Node.js App (Manual build)
+  # -----------------------------
+  nodejs-manual-app:
+    image: node-app:latest
+    container_name: nodejs-manual-app
+    ports:
+      - "8003:8003"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # -----------------------------
+  # Node Exporter (Linux metrics)
+  # -----------------------------
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # -----------------------------
+  # cAdvisor (Docker metrics)
+  # -----------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8090:8080"   # host:container
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # -----------------------------
+  # Prometheus
+  # -----------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # -----------------------------
+  # Grafana
+  # -----------------------------
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+    restart: unless-stopped
