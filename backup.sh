@@ -2,8 +2,8 @@
 
 # this script will take periodic backups
 
-src= "/home/ubuntu/dockernodeapp"
-dest="/home/ubuntu/dockernodeapp"
+src= "/home/ubuntu/nodeapp"
+dest="/home/ubuntu/nodeapp"
 
 timestamp=$(date '+%Y-%m-%d')
 
