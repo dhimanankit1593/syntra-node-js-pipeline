@@ -11,13 +11,13 @@ agent any
         }
         stage("Build & Test"){
             steps{
-                sh "sudo docker build . -t nodes-app-jenkins:latest"
+                sh "docker build . -t nodes-app-jenkins:latest"
             }
         }
         
         stage("Deploy"){
             steps{
-                sh "sudo docker run -d   --name nodes-app-jenkins   --restart unless-stopped   -p 8002:8002   nodes-app-jenkins:latest"
+                sh "docker run -d   --name nodes-app-jenkins   --restart unless-stopped   -p 8002:8002   nodes-app-jenkins:latest"
             }
         }
     }
